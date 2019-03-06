@@ -1,0 +1,9 @@
+[package]
+name = "game_of_life"
+version = "0.1.0"
+authors = ["Markus Diewald <mdiewald.md@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+ggez = "0.4.4"
+rand = "0.6.5"
