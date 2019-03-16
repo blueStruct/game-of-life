@@ -11,12 +11,18 @@ enum Cell {
     Dead,
 }
 
+const NEIGHBOR_IDS: [(i16, i16); 8] = [
+    (-1, -1), (-1, 0), (-1, 1),
+    (0, -1), (0, 1),
+    (1, -1), (1, 0), (1, 1),
+];
+
 type CellBuffer = Vec<Vec<Cell>>;
 
 struct Grid {
-    swapped: bool,
     buffer0: CellBuffer,
     buffer1: CellBuffer,
+    swapped: bool,
     w: usize,
     h: usize,
 }
@@ -48,24 +54,16 @@ impl Grid {
     }
 
     fn get_buffers(&mut self) -> (&mut CellBuffer, &CellBuffer) {
-        if !self.swapped {
-            (&mut self.buffer0, &self.buffer1)
-        } else {
+        if self.swapped {
             (&mut self.buffer1, &self.buffer0)
+        } else {
+            (&mut self.buffer0, &self.buffer1)
         }
     }
 
     fn step(&mut self) {
         let (h, w) = (self.h as i16, self.w as i16);
         let (next, current) = self.get_buffers();
-        let mut neighbor_cells: Vec<(i16, i16)> = Vec::new();
-
-        for &x in &[-1, 1, 0] {
-            for &y in &[-1, 1, 0] {
-                neighbor_cells.push((x, y));
-            }
-        }
-        neighbor_cells.pop();
 
         for (y, line) in next.iter_mut().enumerate() {
             for (x, cell) in line.iter_mut().enumerate() {
@@ -73,7 +71,8 @@ impl Grid {
                 let x = x as i16;
                 let y = y as i16;
                 let mut neighbors = 0;
-                for (nx, ny) in &neighbor_cells {
+
+                for (nx, ny) in &NEIGHBOR_IDS {
                     let iy = {
                         if y + ny > h - 1 {
                             0
