@@ -1,9 +1,11 @@
-use ggez::*;
-use ggez::graphics::{DrawMode, Point2};
-use Cell::*;
-use rand::Rng;
 use std::env;
 
+use ggez::*;
+use ggez::graphics::{DrawMode, Point2};
+use rayon::prelude::*;
+use rand::Rng;
+
+use Cell::*;
 
 #[derive(Clone, PartialEq)]
 enum Cell {
@@ -65,8 +67,8 @@ impl Grid {
         let (h, w) = (self.h as i16, self.w as i16);
         let (next, current) = self.get_buffers();
 
-        for (y, line) in next.iter_mut().enumerate() {
-            for (x, cell) in line.iter_mut().enumerate() {
+        next.par_iter_mut().enumerate().for_each(|(y, line)| {
+            line.par_iter_mut().enumerate().for_each(|(x, cell)| {
                 // count the neighbors
                 let x = x as i16;
                 let y = y as i16;
@@ -106,8 +108,8 @@ impl Grid {
                     (&Dead, _) => *cell = Dead,
                     _ => {},
                 }
-            }
-        }
+            })
+        });
     }
 }
 
