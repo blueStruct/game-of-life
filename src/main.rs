@@ -37,7 +37,7 @@ impl Grid {
             swapped: false,
             w, h,
         };
-        
+
         let mut rng = rand::thread_rng();
 
         for line in &mut grid.buffer0 {
@@ -103,7 +103,7 @@ impl Grid {
                 // apply rules to cell
                 match (&current[y as usize][x as usize], neighbors) {
                     (&Alive, i) if i < 2 || i > 3 => *cell = Dead,
-                    (&Alive, 2 ..= 3) => *cell = Alive, 
+                    (&Alive, 2 ..= 3) => *cell = Alive,
                     (&Dead, 3) => *cell = Alive,
                     (&Dead, _) => *cell = Dead,
                     _ => {},
@@ -130,38 +130,38 @@ impl event::EventHandler for MainState {
         while timer::check_update_time(ctx, 10) {
             self.grid.swap();
             self.grid.step();
+            let cell_size = self.cell_size;
+            let (_, next) = self.grid.get_buffers();
+            let mut mesh = graphics::MeshBuilder::new();
+
+            graphics::clear(ctx);
+
+            for (y, line) in next.iter().enumerate() {
+                for (x, cell) in line.iter().enumerate() {
+                    if *cell == Alive {
+                        let y = y as f32;
+                        let x = x as f32;
+                        let mesh = mesh.polygon(
+                            DrawMode::Fill,
+                            &[
+                                Point2::new(x*cell_size, y*cell_size),
+                                Point2::new((x+1.0)*cell_size, y*cell_size),
+                                Point2::new((x+1.0)*cell_size, (y+1.0)*cell_size),
+                                Point2::new(x*cell_size, (y+1.0)*cell_size),
+                            ],
+                        );
+                    }
+                }
+            }
+
+            let built_mesh = mesh.build(ctx)?;
+            graphics::draw(ctx, &built_mesh, Point2::new(0.0, 0.0), 0.0).unwrap();
+            graphics::present(ctx);
         }
         Ok(())
     }
 
-    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let cell_size = self.cell_size;
-        let (_, next) = self.grid.get_buffers();
-        let mut mesh = graphics::MeshBuilder::new();
-
-        graphics::clear(ctx);
-
-        for (y, line) in next.iter().enumerate() {
-            for (x, cell) in line.iter().enumerate() {
-                if *cell == Alive {
-                    let y = y as f32;
-                    let x = x as f32;
-                    let mesh = mesh.polygon(
-                        DrawMode::Fill,
-                        &[
-                            Point2::new(x*cell_size, y*cell_size),
-                            Point2::new((x+1.0)*cell_size, y*cell_size),
-                            Point2::new((x+1.0)*cell_size, (y+1.0)*cell_size),
-                            Point2::new(x*cell_size, (y+1.0)*cell_size),
-                        ],
-                    );
-                }
-            }
-        }
-
-        let built_mesh = mesh.build(ctx)?;
-        graphics::draw(ctx, &built_mesh, Point2::new(0.0, 0.0), 0.0).unwrap();
-        graphics::present(ctx);
+    fn draw(&mut self, _ctx: &mut Context) -> GameResult<()> {
         Ok(())
     }
 }
