@@ -22,9 +22,8 @@ const NEIGHBOR_IDS: [(i16, i16); 8] = [
 type CellBuffer = Vec<Vec<Cell>>;
 
 struct Grid {
-    buffer0: CellBuffer,
-    buffer1: CellBuffer,
-    swapped: bool,
+    write_buf: CellBuffer,
+    read_buf: CellBuffer,
     w: usize,
     h: usize,
 }
@@ -32,15 +31,14 @@ struct Grid {
 impl Grid {
     fn new(w: usize, h: usize) -> Self {
         let mut grid = Grid {
-            buffer0: vec![vec![Dead; w]; h],
-            buffer1: vec![vec![Dead; w]; h],
-            swapped: false,
+            write_buf: vec![vec![Dead; w]; h],
+            read_buf: vec![vec![Dead; w]; h],
             w, h,
         };
 
         let mut rng = rand::thread_rng();
 
-        for line in &mut grid.buffer0 {
+        for line in &mut grid.write_buf {
             for element in line {
                 if rng.gen::<f32>() < 0.33 {
                     *element = Alive;
@@ -52,20 +50,12 @@ impl Grid {
     }
 
     fn swap(&mut self) {
-        self.swapped = !self.swapped;
-    }
-
-    fn get_buffers(&mut self) -> (&mut CellBuffer, &CellBuffer) {
-        if self.swapped {
-            (&mut self.buffer1, &self.buffer0)
-        } else {
-            (&mut self.buffer0, &self.buffer1)
-        }
+        std::mem::swap(&mut self.write_buf, &mut self.read_buf);
     }
 
     fn step(&mut self) {
         let (h, w) = (self.h as i16, self.w as i16);
-        let (next, current) = self.get_buffers();
+        let (next, current) = (&mut self.write_buf, &self.read_buf);
 
         next.par_iter_mut().enumerate().for_each(|(y, line)| {
             line.par_iter_mut().enumerate().for_each(|(x, cell)| {
@@ -131,7 +121,7 @@ impl event::EventHandler for MainState {
             self.grid.swap();
             self.grid.step();
             let cell_size = self.cell_size;
-            let (_, next) = self.grid.get_buffers();
+            let next = &mut self.grid.write_buf;
             let mut mesh = graphics::MeshBuilder::new();
 
             graphics::clear(ctx);
