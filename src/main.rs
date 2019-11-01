@@ -133,19 +133,19 @@ impl event::EventHandler for MainState {
         Ok(())
     }
 
-    fn draw(&mut self, _ctx: &mut Context) -> GameResult<()> {
+    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        graphics::clear(ctx);
+
         let cell_size = self.cell_size;
         let next = &mut self.grid.write_buf;
         let mut mesh = graphics::MeshBuilder::new();
-
-        graphics::clear(ctx);
 
         for (y, line) in next.iter().enumerate() {
             for (x, cell) in line.iter().enumerate() {
                 if *cell == Alive {
                     let y = y as f32;
                     let x = x as f32;
-                    let mesh = mesh.polygon(
+                    mesh.polygon(
                         DrawMode::Fill,
                         &[
                             Point2::new(x * cell_size, y * cell_size),
