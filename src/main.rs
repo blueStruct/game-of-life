@@ -44,8 +44,8 @@ impl Grid {
 
         let mut rng = rand::thread_rng();
 
-        for line in &mut grid.write_buf {
-            for element in line {
+        for row in &mut grid.write_buf {
+            for element in row {
                 if rng.gen::<f32>() < 0.33 {
                     *element = Alive;
                 }
@@ -61,10 +61,10 @@ impl Grid {
 
     fn step(&mut self) {
         let (h, w) = (self.h as i16, self.w as i16);
-        let (next, current) = (&mut self.write_buf, &self.read_buf);
+        let (write_buf, read_buf) = (&mut self.write_buf, &self.read_buf);
 
-        next.par_iter_mut().enumerate().for_each(|(y, line)| {
-            line.par_iter_mut().enumerate().for_each(|(x, cell)| {
+        write_buf.par_iter_mut().enumerate().for_each(|(y, row)| {
+            row.par_iter_mut().enumerate().for_each(|(x, cell)| {
                 // count the neighbors
                 let y1 = y as i16;
                 let x1 = x as i16;
@@ -74,13 +74,13 @@ impl Grid {
                     let y2 = (y1 + dy + h) % h;
                     let x2 = (x1 + dx + w) % w;
 
-                    if current[y2 as usize][x2 as usize] == Alive {
+                    if read_buf[y2 as usize][x2 as usize] == Alive {
                         neighbors += 1;
                     };
                 }
 
                 // apply rules to cell
-                match (&current[y][x], neighbors) {
+                match (&read_buf[y][x], neighbors) {
                     (&Dead, 3) => *cell = Alive,
                     (&Dead, _) => *cell = Dead,
                     (&Alive, i) if i < 2 || i > 3 => *cell = Dead,
@@ -123,8 +123,8 @@ impl event::EventHandler for MainState {
         let next = &mut self.grid.write_buf;
         let mut mesh = graphics::MeshBuilder::new();
 
-        for (y, line) in next.iter().enumerate() {
-            for (x, cell) in line.iter().enumerate() {
+        for (y, row) in next.iter().enumerate() {
+            for (x, cell) in row.iter().enumerate() {
                 if *cell == Alive {
                     let y1 = y as f32 * cell_size;
                     let x1 = x as f32 * cell_size;
