@@ -64,7 +64,7 @@ impl Grid {
         let (write_buf, read_buf) = (&mut self.write_buf, &self.read_buf);
 
         write_buf.par_iter_mut().enumerate().for_each(|(y, row)| {
-            row.par_iter_mut().enumerate().for_each(|(x, cell)| {
+            row.iter_mut().enumerate().for_each(|(x, cell)| {
                 // count the neighbors
                 let y1 = y as i16;
                 let x1 = x as i16;
