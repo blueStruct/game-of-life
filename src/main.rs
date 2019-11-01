@@ -1,9 +1,9 @@
 use std::env;
 
-use ggez::*;
 use ggez::graphics::{DrawMode, Point2};
-use rayon::prelude::*;
+use ggez::*;
 use rand::Rng;
+use rayon::prelude::*;
 
 use Cell::*;
 
@@ -14,9 +14,14 @@ enum Cell {
 }
 
 const NEIGHBOR_IDS: [(i16, i16); 8] = [
-    (-1, -1), (-1, 0), (-1, 1),
-    (0, -1), (0, 1),
-    (1, -1), (1, 0), (1, 1),
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
 ];
 
 type CellBuffer = Vec<Vec<Cell>>;
@@ -33,7 +38,8 @@ impl Grid {
         let mut grid = Grid {
             write_buf: vec![vec![Dead; w]; h],
             read_buf: vec![vec![Dead; w]; h],
-            w, h,
+            w,
+            h,
         };
 
         let mut rng = rand::thread_rng();
@@ -64,7 +70,7 @@ impl Grid {
                 let y = y as i16;
                 let mut neighbors = 0;
 
-                for (nx, ny) in &NEIGHBOR_IDS {
+                for (ny, nx) in &NEIGHBOR_IDS {
                     let iy = {
                         if y + ny > h - 1 {
                             0
@@ -93,10 +99,10 @@ impl Grid {
                 // apply rules to cell
                 match (&current[y as usize][x as usize], neighbors) {
                     (&Alive, i) if i < 2 || i > 3 => *cell = Dead,
-                    (&Alive, 2 ..= 3) => *cell = Alive,
+                    (&Alive, 2..=3) => *cell = Alive,
                     (&Dead, 3) => *cell = Alive,
                     (&Dead, _) => *cell = Dead,
-                    _ => {},
+                    _ => {}
                 }
             })
         });
@@ -110,7 +116,10 @@ struct MainState {
 
 impl MainState {
     fn new(_ctx: &mut Context, w: usize, h: usize, cell_size: f32) -> GameResult<MainState> {
-        let s = MainState { grid: Grid::new(w, h), cell_size };
+        let s = MainState {
+            grid: Grid::new(w, h),
+            cell_size,
+        };
         Ok(s)
     }
 }
@@ -134,10 +143,10 @@ impl event::EventHandler for MainState {
                         let mesh = mesh.polygon(
                             DrawMode::Fill,
                             &[
-                                Point2::new(x*cell_size, y*cell_size),
-                                Point2::new((x+1.0)*cell_size, y*cell_size),
-                                Point2::new((x+1.0)*cell_size, (y+1.0)*cell_size),
-                                Point2::new(x*cell_size, (y+1.0)*cell_size),
+                                Point2::new(x * cell_size, y * cell_size),
+                                Point2::new((x + 1.0) * cell_size, y * cell_size),
+                                Point2::new((x + 1.0) * cell_size, (y + 1.0) * cell_size),
+                                Point2::new(x * cell_size, (y + 1.0) * cell_size),
                             ],
                         );
                     }
@@ -178,7 +187,7 @@ pub fn main() {
         window_mode: conf::WindowMode {
             width: w * cell_size,
             height: h * cell_size,
-            .. conf::WindowMode::default()
+            ..conf::WindowMode::default()
         },
         window_setup: conf::WindowSetup::default(),
         backend: conf::Backend::default(),
