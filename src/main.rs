@@ -81,10 +81,10 @@ impl Grid {
 
                 // apply rules to cell
                 match (&current[y][x], neighbors) {
-                    (&Alive, i) if i < 2 || i > 3 => *cell = Dead,
-                    (&Alive, 2..=3) => *cell = Alive,
                     (&Dead, 3) => *cell = Alive,
                     (&Dead, _) => *cell = Dead,
+                    (&Alive, i) if i < 2 || i > 3 => *cell = Dead,
+                    (&Alive, 2..=3) => *cell = Alive,
                     _ => {}
                 }
             })
