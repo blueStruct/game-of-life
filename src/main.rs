@@ -7,10 +7,37 @@ use rayon::prelude::*;
 
 use Cell::*;
 
-#[derive(Clone, PartialEq)]
-enum Cell {
-    Dead,
-    Alive,
+pub fn main() {
+    let args: Vec<_> = env::args().collect();
+
+    let mut w = 100;
+    if args.len() >= 2 {
+        w = args[1].parse::<u32>().unwrap();
+    }
+
+    let mut h = 100;
+    if args.len() >= 3 {
+        h = args[2].parse::<u32>().unwrap();
+    }
+
+    let mut cell_size = 8;
+    if args.len() >= 4 {
+        cell_size = args[3].parse::<u32>().unwrap();
+    }
+
+    let c = conf::Conf {
+        window_mode: conf::WindowMode {
+            width: w * cell_size,
+            height: h * cell_size,
+            ..conf::WindowMode::default()
+        },
+        window_setup: conf::WindowSetup::default(),
+        backend: conf::Backend::default(),
+    };
+
+    let ctx = &mut Context::load_from_conf("super_simple", "ggez", c).unwrap();
+    let state = &mut MainState::new(ctx, w as usize, h as usize, cell_size as f32).unwrap();
+    event::run(ctx, state).unwrap();
 }
 
 const NEIGHBOR_IDS: [(i16, i16); 8] = [
@@ -26,11 +53,78 @@ const NEIGHBOR_IDS: [(i16, i16); 8] = [
 
 type CellBuffer = Vec<Vec<Cell>>;
 
+struct MainState {
+    grid: Grid,
+    cell_size: f32,
+}
+
 struct Grid {
     write_buf: CellBuffer,
     read_buf: CellBuffer,
     w: usize,
     h: usize,
+}
+
+#[derive(Clone, PartialEq)]
+enum Cell {
+    Dead,
+    Alive,
+}
+
+impl MainState {
+    fn new(_ctx: &mut Context, w: usize, h: usize, cell_size: f32) -> GameResult<MainState> {
+        let s = MainState {
+            grid: Grid::new(w, h),
+            cell_size,
+        };
+        Ok(s)
+    }
+}
+
+impl event::EventHandler for MainState {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        while timer::check_update_time(ctx, 10) {
+            self.grid.swap();
+            self.grid.step();
+        }
+        Ok(())
+    }
+
+    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        graphics::clear(ctx);
+
+        let cell_size = self.cell_size;
+        let next = &mut self.grid.write_buf;
+        let mut mesh = graphics::MeshBuilder::new();
+
+        for (y, row) in next.iter().enumerate() {
+            for (x, cell) in row.iter().enumerate() {
+                if *cell == Alive {
+                    let y1 = y as f32 * cell_size;
+                    let x1 = x as f32 * cell_size;
+                    let y2 = y1 + cell_size;
+                    let x2 = x1 + cell_size;
+
+                    mesh.polygon(
+                        DrawMode::Fill,
+                        &[
+                            Point2::new(x1, y1),
+                            Point2::new(x2, y1),
+                            Point2::new(x2, y2),
+                            Point2::new(x1, y2),
+                        ],
+                    );
+                }
+            }
+        }
+
+        let built_mesh = mesh.build(ctx)?;
+        graphics::draw(ctx, &built_mesh, Point2::new(0.0, 0.0), 0.0).unwrap();
+        graphics::present(ctx);
+        timer::yield_now();
+
+        Ok(())
+    }
 }
 
 impl Grid {
@@ -90,98 +184,4 @@ impl Grid {
             })
         });
     }
-}
-
-struct MainState {
-    grid: Grid,
-    cell_size: f32,
-}
-
-impl MainState {
-    fn new(_ctx: &mut Context, w: usize, h: usize, cell_size: f32) -> GameResult<MainState> {
-        let s = MainState {
-            grid: Grid::new(w, h),
-            cell_size,
-        };
-        Ok(s)
-    }
-}
-
-impl event::EventHandler for MainState {
-    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        while timer::check_update_time(ctx, 10) {
-            self.grid.swap();
-            self.grid.step();
-        }
-        Ok(())
-    }
-
-    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        graphics::clear(ctx);
-
-        let cell_size = self.cell_size;
-        let next = &mut self.grid.write_buf;
-        let mut mesh = graphics::MeshBuilder::new();
-
-        for (y, row) in next.iter().enumerate() {
-            for (x, cell) in row.iter().enumerate() {
-                if *cell == Alive {
-                    let y1 = y as f32 * cell_size;
-                    let x1 = x as f32 * cell_size;
-                    let y2 = y1 + cell_size;
-                    let x2 = x1 + cell_size;
-
-                    mesh.polygon(
-                        DrawMode::Fill,
-                        &[
-                            Point2::new(x1, y1),
-                            Point2::new(x2, y1),
-                            Point2::new(x2, y2),
-                            Point2::new(x1, y2),
-                        ],
-                    );
-                }
-            }
-        }
-
-        let built_mesh = mesh.build(ctx)?;
-        graphics::draw(ctx, &built_mesh, Point2::new(0.0, 0.0), 0.0).unwrap();
-        graphics::present(ctx);
-        timer::yield_now();
-
-        Ok(())
-    }
-}
-
-pub fn main() {
-    let args: Vec<_> = env::args().collect();
-
-    let mut w = 100;
-    if args.len() >= 2 {
-        w = args[1].parse::<u32>().unwrap();
-    }
-
-    let mut h = 100;
-    if args.len() >= 3 {
-        h = args[2].parse::<u32>().unwrap();
-    }
-
-    let mut cell_size = 8;
-    if args.len() >= 4 {
-        cell_size = args[3].parse::<u32>().unwrap();
-    }
-
-    let c = conf::Conf {
-        window_mode: conf::WindowMode {
-            width: w * cell_size,
-            height: h * cell_size,
-            ..conf::WindowMode::default()
-        },
-        window_setup: conf::WindowSetup::default(),
-        backend: conf::Backend::default(),
-    };
-
-    let ctx = &mut Context::load_from_conf("super_simple", "ggez", c).unwrap();
-    let state = &mut MainState::new(ctx, w as usize, h as usize, cell_size as f32).unwrap();
-    event::run(ctx, state).unwrap();
 }
