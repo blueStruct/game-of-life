@@ -147,6 +147,7 @@ impl event::EventHandler for MainState {
         let built_mesh = mesh.build(ctx)?;
         graphics::draw(ctx, &built_mesh, Point2::new(0.0, 0.0), 0.0).unwrap();
         graphics::present(ctx);
+        timer::yield_now();
 
         Ok(())
     }
