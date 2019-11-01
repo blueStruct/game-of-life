@@ -66,32 +66,15 @@ impl Grid {
         next.par_iter_mut().enumerate().for_each(|(y, line)| {
             line.par_iter_mut().enumerate().for_each(|(x, cell)| {
                 // count the neighbors
-                let x = x as i16;
-                let y = y as i16;
+                let y1 = y as i16;
+                let x1 = x as i16;
                 let mut neighbors = 0;
 
-                for (ny, nx) in &NEIGHBOR_IDS {
-                    let iy = {
-                        if y + ny > h - 1 {
-                            0
-                        } else if y + ny < 0 {
-                            h - 1
-                        } else {
-                            y + ny
-                        }
-                    };
+                for (dy, dx) in &NEIGHBOR_IDS {
+                    let y2 = (y1 + dy + h) % h;
+                    let x2 = (x1 + dx + w) % w;
 
-                    let ix = {
-                        if x + nx > w - 1 {
-                            0
-                        } else if x + nx < 0 {
-                            w - 1
-                        } else {
-                            x + nx
-                        }
-                    };
-
-                    if current[iy as usize][ix as usize] == Alive {
+                    if current[y2 as usize][x2 as usize] == Alive {
                         neighbors += 1;
                     };
                 }
