@@ -143,15 +143,18 @@ impl event::EventHandler for MainState {
         for (y, line) in next.iter().enumerate() {
             for (x, cell) in line.iter().enumerate() {
                 if *cell == Alive {
-                    let y = y as f32;
-                    let x = x as f32;
+                    let y1 = y as f32 * cell_size;
+                    let x1 = x as f32 * cell_size;
+                    let y2 = y1 + cell_size;
+                    let x2 = x1 + cell_size;
+
                     mesh.polygon(
                         DrawMode::Fill,
                         &[
-                            Point2::new(x * cell_size, y * cell_size),
-                            Point2::new((x + 1.0) * cell_size, y * cell_size),
-                            Point2::new((x + 1.0) * cell_size, (y + 1.0) * cell_size),
-                            Point2::new(x * cell_size, (y + 1.0) * cell_size),
+                            Point2::new(x1, y1),
+                            Point2::new(x2, y1),
+                            Point2::new(x2, y2),
+                            Point2::new(x1, y2),
                         ],
                     );
                 }
