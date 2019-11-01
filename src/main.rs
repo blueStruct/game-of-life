@@ -9,8 +9,8 @@ use Cell::*;
 
 #[derive(Clone, PartialEq)]
 enum Cell {
-    Alive,
     Dead,
+    Alive,
 }
 
 const NEIGHBOR_IDS: [(i16, i16); 8] = [
@@ -80,7 +80,7 @@ impl Grid {
                 }
 
                 // apply rules to cell
-                match (&current[y as usize][x as usize], neighbors) {
+                match (&current[y][x], neighbors) {
                     (&Alive, i) if i < 2 || i > 3 => *cell = Dead,
                     (&Alive, 2..=3) => *cell = Alive,
                     (&Dead, 3) => *cell = Alive,
