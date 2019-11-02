@@ -4,7 +4,11 @@ version = "0.1.0"
 authors = ["Markus Diewald <mdiewald.md@gmail.com>"]
 edition = "2018"
 
+[profile.release]
+debug = true
+
 [dependencies]
 ggez = "0.5.1"
 rand = "0.7.2"
 rayon = "1.2.0"
+
