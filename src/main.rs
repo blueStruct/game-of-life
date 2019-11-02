@@ -12,9 +12,9 @@ pub fn main() {
         .map(|x| x.parse::<f32>().expect("not a number"))
         .collect();
 
-    let w = args[0];
-    let h = args[1];
-    let cell_size = args[2];
+    let w = if args.len() > 0 { args[0] } else { 100.0 };
+    let h = if args.len() > 1 { args[1] } else { 100.0 };
+    let cell_size = if args.len() > 2 { args[2] } else { 4.0 };
 
     let (mut ctx, mut event_loop) = ContextBuilder::new("game of life", "markus")
         .window_mode(conf::WindowMode {
